@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Mental Arithmetic!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap'); /* Using a friendly font */
+
+        :root { /* Define color variables for easier theme management */
+            --bg-color: #e790ff;
+            --container-bg: rgba(255, 255, 255, 0.92);
+            --border-color: #ffadc5;
+            --primary-text: #6a1b9a;
+            --secondary-text: #4a148c;
+            --input-border: #ce93d8;
+            --input-border-focus: #ab47bc;
+            --button-grad-1: #ff80ab;
+            --button-grad-2: #ff4081;
+            --button-hover-1: #ff4081;
+            --button-hover-2: #f50057;
+            --quiz-bg: #e1bee7;
+            --correct-bg: #c8e6c9;
+            --correct-text: #388e3c;
+            --incorrect-bg: #ffcdd2;
+            --incorrect-text: #d32f2f;
+            --results-bg: rgba(200, 230, 201, 0.9);
+            --results-border: #81c784;
+            --results-header: #2e7d32;
+            --results-text: #1b5e20;
+            --results-highlight: #004d40;
+            --results-button-1: #66bb6a;
+            --results-button-2: #388e3c;
+            --results-button-hover-1: #388e3c;
+            --results-button-hover-2: #1b5e20;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            background-color: var(--bg-color);
+            margin: 0;
+            box-sizing: border-box;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        #corgi-decoration {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 450px;
+            height: auto;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 480px;
+            border: 3px solid var(--border-color);
+            z-index: 2;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary-text);
+            margin-bottom: 25px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* --- Settings --- */
+        #settings {
+            margin-bottom: 25px;
+            display: flex; /* Use flexbox for better alignment */
+            flex-direction: column; /* Stack settings vertically */
+            gap: 15px; /* Space between setting groups */
+        }
+
+        .setting-group {
+            /* margin-bottom: 20px; Removed, using gap now */
+            text-align: left;
+        }
+
+        .setting-group label,
+        .setting-group legend {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--secondary-text);
+            font-size: 1.1em;
+        }
+         /* Specific label styling for number input */
+         label[for="num-questions"] {
+             display: inline-block; /* Keep label and input on same line */
+             margin-right: 10px;
+             vertical-align: middle;
+         }
+
+        .setting-group input[type="number"] {
+            padding: 10px 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            width: 70px;
+            font-size: 1.1em;
+            font-family: 'Nunito', sans-serif;
+            text-align: center;
+            vertical-align: middle; /* Align with label */
+        }
+         .setting-group input[type="number"]:focus {
+             border-color: var(--input-border-focus);
+             outline: none;
+         }
+
+
+        .setting-group fieldset {
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            padding: 10px 15px 15px 15px; /* Adjust padding */
+            margin-top: 5px;
+        }
+
+        .setting-group legend {
+            padding: 0 10px;
+            color: var(--secondary-text);
+            font-size: 1.1em; /* Match label size */
+            font-weight: bold;
+        }
+
+        .setting-group .radio-options {
+             display: flex; /* Align radio options */
+             flex-wrap: wrap; /* Allow wrapping on smaller screens */
+             gap: 15px; /* Space between radio options */
+             margin-top: 5px; /* Space below legend */
+        }
+
+        .setting-group .radio-options label {
+            font-weight: normal;
+            display: inline-flex; /* Use flex for better alignment of radio & text */
+            align-items: center; /* Vertically center radio and text */
+            color: #333;
+            font-size: 1em;
+            cursor: pointer;
+            margin-right: 0; /* Using gap instead */
+            margin-bottom: 5px; /* Space if they wrap */
+        }
+         .setting-group .radio-options input[type="radio"]{
+            margin-right: 7px; /* Space between radio and its label text */
+            cursor: pointer;
+            /* Custom radio style */
+            appearance: none;
+            background-color: #fff;
+            margin: 0 7px 0 0;
+            font: inherit;
+            color: var(--input-border-focus);
+            width: 1.25em; /* Slightly larger */
+            height: 1.25em;
+            border: 0.15em solid var(--input-border);
+            border-radius: 50%;
+            transform: translateY(-0.075em);
+            display: grid;
+            place-content: center;
+         }
+         .setting-group .radio-options input[type="radio"]::before {
+            content: "";
+            width: 0.7em; /* Adjust inner circle size */
+            height: 0.7em;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em var(--input-border-focus);
+         }
+        .setting-group .radio-options input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+        .setting-group .radio-options input[type="radio"]:focus {
+            outline: 2px solid var(--button-grad-1); /* Add focus style */
+            outline-offset: 2px;
+        }
+
+
+        button {
+            background: linear-gradient(45deg, var(--button-grad-1), var(--button-grad-2));
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px; /* Reduced margin */
+            align-self: center; /* Center button within flex container */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, var(--button-hover-1), var(--button-hover-2));
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        button:active {
+             transform: translateY(0px);
+             box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Quiz --- */
+        #quiz {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #question-container {
+            font-size: 3em;
+            margin-bottom: 25px;
+            font-weight: bold;
+            color: var(--secondary-text);
+            min-height: 60px;
+            background-color: var(--quiz-bg);
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+         #question-text {
+             display: inline-block;
+             min-width: 160px;
+             text-align: right;
+             letter-spacing: 2px;
+         }
+        #answer-input {
+            padding: 12px;
+            font-size: 1.8em;
+            width: 100px;
+            text-align: center;
+            border: 3px solid var(--input-border-focus);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: bold;
+            color: var(--secondary-text);
+        }
+         #answer-input:focus {
+             border-color: var(--button-grad-2); /* Pink focus border */
+             outline: none;
+             box-shadow: 0 0 5px rgba(255, 64, 129, 0.5);
+         }
+
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 25px;
+            font-size: 1.2em;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .correct {
+            color: var(--correct-text);
+            background-color: var(--correct-bg);
+        }
+
+        .incorrect {
+            color: var(--incorrect-text);
+             background-color: var(--incorrect-bg);
+        }
+
+        #progress-timer {
+            margin-top: 25px;
+            font-size: 1em;
+            color: var(--primary-text);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            background-color: rgba(225, 190, 231, 0.7);
+            border-radius: 5px;
+        }
+
+        /* --- Results --- */
+        #results {
+            display: none;
+            margin-top: 20px;
+            background-color: var(--results-bg);
+            padding: 30px 40px;
+            border-radius: 15px;
+            border: 3px solid var(--results-border);
+        }
+
+        #results h2 {
+            color: var(--results-header);
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        #results p {
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            color: var(--results-text);
+        }
+        #results span {
+            font-weight: bold;
+            color: var(--results-highlight);
+            background-color: rgba(255,255,255,0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Make restart button green */
+        #restart-button {
+             background: linear-gradient(45deg, var(--results-button-1), var(--results-button-2));
+        }
+         #restart-button:hover {
+             background: linear-gradient(45deg, var(--results-button-hover-1), var(--results-button-hover-2));
+         }
+
+         /* Style to hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield; /* Firefox */
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Main Content Container -->
+    <div class="container">
+        <h1>Fun Mental Arithmetic!</h1>
+
+        <!-- Settings Section -->
+        <div id="settings">
+             <div class="setting-group">
+                 <label for="num-questions">How many questions?</label>
+                 <input type="number" id="num-questions" value="20" min="1" max="100">
+             </div>
+
+            <div class="setting-group">
+                 <fieldset>
+                    <legend>Difficulty</legend>
+                    <div class="radio-options">
+                        <input type="radio" id="diff-easy" name="difficulty" value="easy" checked>
+                        <label for="diff-easy">Easy 😊</label>
+                        <input type="radio" id="diff-hard" name="difficulty" value="hard">
+                        <label for="diff-hard">Hard 🔥</label>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="setting-group">
+                 <fieldset>
+                    <legend>What kind of sums?</legend>
+                    <div class="radio-options">
+                        <input type="radio" id="op-add" name="operation" value="add" checked>
+                        <label for="op-add">Plus +</label>
+                        <input type="radio" id="op-sub" name="operation" value="sub">
+                        <label for="op-sub">Minus -</label>
+                        <input type="radio" id="op-both" name="operation" value="both">
+                        <label for="op-both">Both! ✨</label>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button id="start-button">Let's Go!</button>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz">
+            <div id="question-container">
+                <span id="question-text"></span> = <input type="number" id="answer-input" autofocus>
+            </div>
+            <div id="feedback"></div>
+            <div id="progress-timer">
+                <span id="question-progress">Question 1 / 20</span>
+                <span id="timer">Time: 00:00</span>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results">
+            <h2>🎉 Well Done! 🎉</h2>
+            <p>You got <span id="correct-count">0</span> out of <span id="total-count">0</span> right!</p>
+            <p>Your final number range was: <span id="final-range">0 - 5</span></p>
+            <p>Total Time: <span id="total-time">00:00</span></p>
+            <button id="restart-button">Play Again?</button>
+        </div>
+    </div>
+
+    <!-- Decorative Corgi Image -->
+    <img id="corgi-decoration" src="corgi.jpg" alt="Cute Corgi Decoration">
+
+
+    <script>
+        // --- DOM Elements ---
+        const settingsDiv = document.getElementById('settings');
+        const quizDiv = document.getElementById('quiz');
+        const resultsDiv = document.getElementById('results');
+
+        const numQuestionsInput = document.getElementById('num-questions');
+        const operationRadios = document.getElementsByName('operation');
+        const difficultyRadios = document.getElementsByName('difficulty'); // Added difficulty radios
+        const startButton = document.getElementById('start-button');
+
+        const questionTextSpan = document.getElementById('question-text');
+        const answerInput = document.getElementById('answer-input');
+        const feedbackDiv = document.getElementById('feedback');
+        const questionProgressSpan = document.getElementById('question-progress');
+        const timerSpan = document.getElementById('timer');
+
+        const correctCountSpan = document.getElementById('correct-count');
+        const totalCountSpan = document.getElementById('total-count');
+        const finalRangeSpan = document.getElementById('final-range');
+        const totalTimeSpan = document.getElementById('total-time');
+        const restartButton = document.getElementById('restart-button');
+
+        // --- Quiz State ---
+        let totalQuestions = 20;
+        let operationType = 'add';
+        let selectedDifficulty = 'easy'; // Added difficulty state
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let currentMaxRange = 5; // Initial value, will be updated based on difficulty
+        const MIN_RANGE = 1; // Minimum upper bound for the range
+        let currentQuestion = null;
+        let startTime = null;
+        let timerInterval = null;
+
+        // --- Difficulty Settings ---
+        const EASY_START_RANGE = 5;
+        const HARD_START_RANGE = 10;
+        const EASY_RANGE_INCREMENT = 1;
+        const HARD_RANGE_INCREMENT = 2;
+        const RANGE_DECREMENT = 1; // Same decrement for both difficulties
+
+        // --- Helper Functions ---
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function formatTime(milliseconds) {
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // --- Quiz Logic Functions ---
+        function generateQuestion() {
+            let num1, num2, operator, answer;
+            let selectedOp = operationType;
+
+            if (selectedOp === 'both') {
+                selectedOp = Math.random() < 0.5 ? 'add' : 'sub';
+            }
+
+            // Generate numbers within the current range
+            num1 = getRandomInt(0, currentMaxRange);
+            num2 = getRandomInt(0, currentMaxRange);
+
+            if (selectedOp === 'add') {
+                operator = '+';
+                answer = num1 + num2;
+            } else { // Subtraction
+                operator = '-';
+                if (num1 < num2) {
+                    [num1, num2] = [num2, num1]; // Ensure num1 >= num2
+                }
+                // Avoid x - x = 0 if range is small, attempt adjustment
+                 if (num1 === num2 && currentMaxRange <= (selectedDifficulty === 'easy' ? 2 : 4) ) { // Adjust threshold based on difficulty?
+                    num1++;
+                    if (num1 > currentMaxRange) {
+                        if(num2 > 0) {
+                            num2--; num1--;
+                        } else {
+                            num1--;
+                        }
+                    }
+                 }
+                answer = num1 - num2;
+            }
+
+            currentQuestion = { num1, num2, operator, answer };
+            questionTextSpan.textContent = `${num1} ${operator} ${num2}`;
+            questionProgressSpan.textContent = `Question ${currentQuestionIndex + 1} / ${totalQuestions}`;
+            answerInput.value = '';
+            feedbackDiv.textContent = '';
+            feedbackDiv.className = '';
+            answerInput.focus();
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            const elapsedTime = now - startTime;
+            timerSpan.textContent = `Time: ${formatTime(elapsedTime)}`;
+        }
+
+        function checkAnswer() {
+            const userAnswerStr = answerInput.value.trim();
+             if (userAnswerStr === '') {
+                 feedbackDiv.textContent = "Type your answer! 😊";
+                 feedbackDiv.className = 'incorrect';
+                 return;
+             }
+
+            const userAnswer = parseInt(userAnswerStr, 10);
+            answerInput.disabled = true;
+
+            if (isNaN(userAnswer)) {
+                feedbackDiv.textContent = "Oops! Use numbers only. 😉";
+                feedbackDiv.className = 'incorrect';
+                 setTimeout(() => {
+                    answerInput.disabled = false;
+                    answerInput.focus();
+                    answerInput.select();
+                 }, 1000);
+                return;
+            }
+
+            let delay = 600; // Default delay
+
+            if (userAnswer === currentQuestion.answer) {
+                feedbackDiv.textContent = "Correct! 😄👍";
+                feedbackDiv.className = 'correct';
+                correctAnswers++;
+                // Increase range based on difficulty
+                if (selectedDifficulty === 'hard') {
+                    currentMaxRange += HARD_RANGE_INCREMENT;
+                } else {
+                    currentMaxRange += EASY_RANGE_INCREMENT;
+                }
+            } else {
+                feedbackDiv.textContent = `Not quite! The answer was ${currentQuestion.answer}. 🤔`;
+                feedbackDiv.className = 'incorrect';
+                // Decrease range (same for both difficulties)
+                currentMaxRange = Math.max(MIN_RANGE, currentMaxRange - RANGE_DECREMENT);
+                delay = 1500; // Longer delay for incorrect answer
+            }
+
+            setTimeout(() => {
+                answerInput.disabled = false;
+                moveToNextQuestion();
+            }, delay);
+        }
+
+        function moveToNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < totalQuestions) {
+                generateQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function startGame() {
+            // 1. Read Settings
+            totalQuestions = parseInt(numQuestionsInput.value, 10) || 20;
+            if (totalQuestions < 1) totalQuestions = 1;
+            if (totalQuestions > 100) totalQuestions = 100;
+            numQuestionsInput.value = totalQuestions;
+
+            for (const radio of operationRadios) {
+                if (radio.checked) {
+                    operationType = radio.value;
+                    break;
+                }
+            }
+            // Read difficulty setting
+            for (const radio of difficultyRadios) {
+                if (radio.checked) {
+                    selectedDifficulty = radio.value;
+                    break;
+                }
+            }
+
+            // 2. Reset state
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            startTime = Date.now();
+            feedbackDiv.textContent = '';
+            feedbackDiv.className = '';
+
+            // Set initial range based on difficulty
+            if (selectedDifficulty === 'hard') {
+                currentMaxRange = HARD_START_RANGE;
+            } else { // Default to easy
+                currentMaxRange = EASY_START_RANGE;
+            }
+            console.log(`Starting game: ${selectedDifficulty} difficulty, range 0-${currentMaxRange}`); // Debug log
+
+            // 3. Update UI
+            settingsDiv.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            quizDiv.style.display = 'block';
+            answerInput.disabled = false;
+
+            // 4. Start Timer
+            timerSpan.textContent = 'Time: 00:00';
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // 5. Generate first question
+            generateQuestion();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            const endTime = Date.now();
+            const totalTimeMillis = endTime - startTime;
+
+            quizDiv.style.display = 'none';
+            resultsDiv.style.display = 'block';
+
+            correctCountSpan.textContent = correctAnswers;
+            totalCountSpan.textContent = totalQuestions;
+            finalRangeSpan.textContent = `0 - ${currentMaxRange}`; // Display the final max range reached
+            totalTimeSpan.textContent = formatTime(totalTimeMillis);
+        }
+
+        function resetApp() {
+            clearInterval(timerInterval);
+            resultsDiv.style.display = 'none';
+            quizDiv.style.display = 'none';
+            settingsDiv.style.display = 'block';
+            // Resetting difficulty/operation to default is optional, depends on desired behavior
+            // document.getElementById('diff-easy').checked = true;
+            // document.getElementById('op-add').checked = true;
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', resetApp);
+
+        answerInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (!answerInput.disabled) {
+                   checkAnswer();
+                }
+            }
+        });
+
+        // --- Initial Setup ---
+        console.log("Fun Arithmetic app ready! 🐾");
+
+    </script>
+</body>
+</html>
