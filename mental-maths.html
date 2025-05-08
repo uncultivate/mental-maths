@@ -53,10 +53,10 @@
             position: fixed;
             bottom: 10px;
             left: 10px;
-            width: 450px;
+            width: 450px; /* Adjust as needed */
             height: auto;
             z-index: 1;
-            pointer-events: none;
+            pointer-events: none; /* So it doesn't interfere with clicks */
         }
 
 
@@ -68,8 +68,8 @@
             width: 90%;
             max-width: 480px;
             border: 3px solid var(--border-color);
-            z-index: 2;
-            position: relative;
+            z-index: 2; /* Ensure container is above the corgi if it overlaps */
+            position: relative; /* Needed for z-index */
         }
 
         h1 {
@@ -107,7 +107,7 @@
              vertical-align: middle;
          }
 
-        .setting-group input[type="number"] {
+        .setting-group input[type="number"], .setting-group input[type="text"] { /* Apply to text as well for answer */
             padding: 10px 12px;
             border: 2px solid var(--input-border);
             border-radius: 8px;
@@ -117,7 +117,7 @@
             text-align: center;
             vertical-align: middle; /* Align with label */
         }
-         .setting-group input[type="number"]:focus {
+         .setting-group input[type="number"]:focus, .setting-group input[type="text"]:focus {
              border-color: var(--input-border-focus);
              outline: none;
          }
@@ -224,7 +224,7 @@
         }
 
         #question-container {
-            font-size: 3em;
+            font-size: 2.5em; /* Adjusted for potentially longer currency questions */
             margin-bottom: 25px;
             font-weight: bold;
             color: var(--secondary-text);
@@ -236,17 +236,18 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
+            flex-wrap: wrap; /* Allow wrapping for long questions */
         }
          #question-text {
              display: inline-block;
-             min-width: 160px;
+             min-width: 160px; /* May need adjustment based on content */
              text-align: right;
-             letter-spacing: 2px;
+             letter-spacing: 1px; /* Slightly reduced for currency */
          }
-        #answer-input {
+        #answer-input { /* Now type="text" */
             padding: 12px;
-            font-size: 1.8em;
-            width: 100px;
+            font-size: 1.5em; /* Adjusted to better fit with question size */
+            width: 120px; /* Wider for currency answers like "$10.50" */
             text-align: center;
             border: 3px solid var(--input-border-focus);
             border-radius: 8px;
@@ -328,7 +329,7 @@
              background: linear-gradient(45deg, var(--results-button-hover-1), var(--results-button-hover-2));
          }
 
-         /* Style to hide number input arrows */
+         /* Style to hide number input arrows (original, might not apply if type="text" is used everywhere) */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
           -webkit-appearance: none;
@@ -349,7 +350,7 @@
         <div id="settings">
              <div class="setting-group">
                  <label for="num-questions">How many questions?</label>
-                 <input type="number" id="num-questions" value="20" min="1" max="100">
+                 <input type="number" id="num-questions" value="10" min="1" max="100">
              </div>
 
             <div class="setting-group">
@@ -373,7 +374,9 @@
                         <input type="radio" id="op-sub" name="operation" value="sub">
                         <label for="op-sub">Minus -</label>
                         <input type="radio" id="op-both" name="operation" value="both">
-                        <label for="op-both">Both! ✨</label>
+                        <label for="op-both">Numbers Mix ✨</label>
+                        <input type="radio" id="op-currency" name="operation" value="currency">
+                        <label for="op-currency">Currency 💰</label>
                     </div>
                 </fieldset>
             </div>
@@ -384,11 +387,11 @@
         <!-- Quiz Section -->
         <div id="quiz">
             <div id="question-container">
-                <span id="question-text"></span> = <input type="number" id="answer-input" autofocus>
+                <span id="question-text"></span> = <input type="text" id="answer-input" autofocus> <!-- Changed to type="text" -->
             </div>
             <div id="feedback"></div>
             <div id="progress-timer">
-                <span id="question-progress">Question 1 / 20</span>
+                <span id="question-progress">Question 1 / 10</span>
                 <span id="timer">Time: 00:00</span>
             </div>
         </div>
@@ -415,7 +418,7 @@
 
         const numQuestionsInput = document.getElementById('num-questions');
         const operationRadios = document.getElementsByName('operation');
-        const difficultyRadios = document.getElementsByName('difficulty'); // Added difficulty radios
+        const difficultyRadios = document.getElementsByName('difficulty');
         const startButton = document.getElementById('start-button');
 
         const questionTextSpan = document.getElementById('question-text');
@@ -431,13 +434,14 @@
         const restartButton = document.getElementById('restart-button');
 
         // --- Quiz State ---
-        let totalQuestions = 20;
+        let totalQuestions = 10; // Default updated for quicker testing
         let operationType = 'add';
-        let selectedDifficulty = 'easy'; // Added difficulty state
+        let selectedDifficulty = 'easy';
         let currentQuestionIndex = 0;
         let correctAnswers = 0;
-        let currentMaxRange = 5; // Initial value, will be updated based on difficulty
-        const MIN_RANGE = 1; // Minimum upper bound for the range
+        let currencyCorrectCount = 0; // Track correct answers in currency mode
+        let currentMaxRange = 5; 
+        let currentMinRange = 1; // Will be updated based on mode
         let currentQuestion = null;
         let startTime = null;
         let timerInterval = null;
@@ -447,7 +451,15 @@
         const HARD_START_RANGE = 10;
         const EASY_RANGE_INCREMENT = 1;
         const HARD_RANGE_INCREMENT = 2;
-        const RANGE_DECREMENT = 1; // Same decrement for both difficulties
+        const RANGE_DECREMENT = 1; 
+        const MIN_RANGE_NUMBERS = 1; // Minimum upper bound for number operations
+
+        // --- Currency Settings ---
+        const CURRENCY_EASY_START_RANGE_CENTS = 100; // Max $1.00 per operand
+        const CURRENCY_HARD_START_RANGE_CENTS = 300; // Max $3.00 per operand
+        const CURRENCY_RANGE_INCREMENT_CENTS = 25;  // Increase max operand by 25c
+        const CURRENCY_RANGE_DECREMENT_CENTS = 20;  // Decrease max operand by 20c
+        const CURRENCY_MIN_RANGE_CENTS = 20;      // Min upper bound for operand range is 20c
 
         // --- Helper Functions ---
         function getRandomInt(min, max) {
@@ -461,43 +473,149 @@
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        // --- Quiz Logic Functions ---
-        function generateQuestion() {
-            let num1, num2, operator, answer;
-            let selectedOp = operationType;
+        function formatCurrency(totalCents) {
+            const isNegative = totalCents < 0;
+            const absCents = Math.abs(totalCents);
+            let sign = isNegative ? "-" : "";
 
-            if (selectedOp === 'both') {
-                selectedOp = Math.random() < 0.5 ? 'add' : 'sub';
+            if (absCents >= 100) {
+                const dollars = Math.floor(absCents / 100);
+                const cents = absCents % 100;
+                return `${sign}$${dollars}.${String(cents).padStart(2, '0')}`;
+            } else {
+                return `${sign}${absCents}c`;
             }
+        }
 
-            // Generate numbers within the current range
-            num1 = getRandomInt(0, currentMaxRange);
-            num2 = getRandomInt(0, currentMaxRange);
+        function parseCurrencyInput(inputStr) {
+            let input = String(inputStr).trim().toLowerCase();
+            if (!input) return NaN;
 
-            if (selectedOp === 'add') {
-                operator = '+';
-                answer = num1 + num2;
-            } else { // Subtraction
-                operator = '-';
-                if (num1 < num2) {
-                    [num1, num2] = [num2, num1]; // Ensure num1 >= num2
-                }
-                // Avoid x - x = 0 if range is small, attempt adjustment
-                 if (num1 === num2 && currentMaxRange <= (selectedDifficulty === 'easy' ? 2 : 4) ) { // Adjust threshold based on difficulty?
-                    num1++;
-                    if (num1 > currentMaxRange) {
-                        if(num2 > 0) {
-                            num2--; num1--;
-                        } else {
-                            num1--;
+            let isNegative = false;
+            if (input.startsWith('-')) {
+                isNegative = true;
+                input = input.substring(1);
+            }
+            
+            input = input.replace(/\s/g, ''); // Remove any internal spaces
+
+            let valueCents = NaN;
+
+            if (input.endsWith('c')) {
+                valueCents = parseInt(input.slice(0, -1), 10);
+            } else {
+                input = input.replace('$', '');
+                if (input.includes('.')) {
+                    valueCents = Math.round(parseFloat(input) * 100);
+                } else {
+                    // If no decimal, assume whole dollars if it was like "$5"
+                    // or just cents if it was "50" or "120"
+                    const num = parseInt(input, 10);
+                    if (!isNaN(num)) {
+                        if (String(inputStr).includes('$')) { // If original input had '$' and no decimal, e.g. "$5"
+                             valueCents = num * 100;
+                        } else { // Plain number e.g. "50" -> 50c, "150" -> 150c ($1.50)
+                             valueCents = num;
                         }
                     }
-                 }
-                answer = num1 - num2;
+                }
+            }
+            
+            if (isNaN(valueCents)) return NaN;
+            return isNegative ? -valueCents : valueCents;
+        }
+
+
+        // --- Quiz Logic Functions ---
+        function generateQuestion() {
+            let num1, num2, operatorSymbol, answer, questionString, formattedAnswerString;
+            
+            if (operationType === 'currency') {
+                // Generate non-zero amounts
+                let num1Cents = getRandomInt(1, currentMaxRange); // Start from 1 instead of 0
+                let num2Cents = getRandomInt(1, currentMaxRange);
+                const opRand = Math.random();
+                
+                // Apply rounding based on number of correct answers
+                if (currencyCorrectCount < 2) {
+                    // Round to whole dollars
+                    num1Cents = Math.round(num1Cents / 100) * 100;
+                    num2Cents = Math.round(num2Cents / 100) * 100;
+                } else if (currencyCorrectCount < 4) {
+                    // Round to 50c
+                    num1Cents = Math.round(num1Cents / 50) * 50;
+                    num2Cents = Math.round(num2Cents / 50) * 50;
+                } else if (currencyCorrectCount < 6) {
+                    // Round to 20c
+                    num1Cents = Math.round(num1Cents / 20) * 20;
+                    num2Cents = Math.round(num2Cents / 20) * 20;
+                } else {
+                    // Round to 10c
+                    num1Cents = Math.round(num1Cents / 10) * 10;
+                    num2Cents = Math.round(num2Cents / 10) * 10;
+                }
+
+                // Ensure minimum amount after rounding
+                num1Cents = Math.max(10, num1Cents);
+                num2Cents = Math.max(10, num2Cents);
+                
+                if (opRand < 0.55) { // Addition
+                    operatorSymbol = '+';
+                    answer = num1Cents + num2Cents;
+                } else { // Subtraction
+                    operatorSymbol = '-';
+                    // Ensure num1 is larger than num2 for positive result
+                    if (num1Cents < num2Cents) { 
+                        [num1Cents, num2Cents] = [num2Cents, num1Cents];
+                    }
+                    // Ensure numbers are different
+                    if (num1Cents === num2Cents) {
+                        if (num1Cents < currentMaxRange) {
+                            num1Cents += (currencyCorrectCount < 2 ? 100 : 
+                                        currencyCorrectCount < 4 ? 50 : 
+                                        currencyCorrectCount < 6 ? 20 : 10);
+                        } else {
+                            num2Cents -= (currencyCorrectCount < 2 ? 100 : 
+                                        currencyCorrectCount < 4 ? 50 : 
+                                        currencyCorrectCount < 6 ? 20 : 10);
+                        }
+                    }
+                    answer = num1Cents - num2Cents;
+                }
+                questionString = `${formatCurrency(num1Cents)} ${operatorSymbol} ${formatCurrency(num2Cents)}`;
+                formattedAnswerString = formatCurrency(answer);
+                currentQuestion = { num1Cents, num2Cents, operator: operatorSymbol, answerCents: answer, questionString, formattedAnswerString };
+            
+            } else { // Original number logic
+                let selectedOpType = operationType;
+                if (selectedOpType === 'both') {
+                    selectedOpType = Math.random() < 0.5 ? 'add' : 'sub';
+                }
+
+                num1 = getRandomInt(0, currentMaxRange);
+                num2 = getRandomInt(0, currentMaxRange);
+
+                if (selectedOpType === 'add') {
+                    operatorSymbol = '+';
+                    answer = num1 + num2;
+                } else { // Subtraction for numbers
+                    operatorSymbol = '-';
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                    }
+                    if (num1 === num2 && currentMaxRange <= (selectedDifficulty === 'easy' ? 2 : 4) ) {
+                        num1++;
+                        if (num1 > currentMaxRange) {
+                            if(num2 > 0) { num2--; num1--; } else { num1--; }
+                        }
+                    }
+                    answer = num1 - num2;
+                }
+                questionString = `${num1} ${operatorSymbol} ${num2}`;
+                currentQuestion = { num1, num2, operator: operatorSymbol, answer, questionString }; // Original structure
             }
 
-            currentQuestion = { num1, num2, operator, answer };
-            questionTextSpan.textContent = `${num1} ${operator} ${num2}`;
+            questionTextSpan.textContent = questionString;
             questionProgressSpan.textContent = `Question ${currentQuestionIndex + 1} / ${totalQuestions}`;
             answerInput.value = '';
             feedbackDiv.textContent = '';
@@ -519,43 +637,71 @@
                  return;
              }
 
-            const userAnswer = parseInt(userAnswerStr, 10);
-            answerInput.disabled = true;
+            answerInput.disabled = true; // Disable input during check
+            let isCorrect = false;
+            let correctAnswerForDisplay;
+            let delay = 600;
 
-            if (isNaN(userAnswer)) {
-                feedbackDiv.textContent = "Oops! Use numbers only. 😉";
-                feedbackDiv.className = 'incorrect';
-                 setTimeout(() => {
-                    answerInput.disabled = false;
-                    answerInput.focus();
-                    answerInput.select();
-                 }, 1000);
-                return;
+            if (operationType === 'currency') {
+                const userAnswerCents = parseCurrencyInput(userAnswerStr);
+                correctAnswerForDisplay = currentQuestion.formattedAnswerString;
+
+                if (isNaN(userAnswerCents)) {
+                    feedbackDiv.textContent = `Oops! Use format like $1.50, 75c, or 1.25. 😉`;
+                    feedbackDiv.className = 'incorrect';
+                    delay = 1200;
+                } else {
+                    isCorrect = (userAnswerCents === currentQuestion.answerCents);
+                    if (isCorrect) {
+                        currencyCorrectCount++;
+                    }
+                }
+            } else { // Original number logic
+                const userAnswer = parseInt(userAnswerStr, 10);
+                correctAnswerForDisplay = currentQuestion.answer;
+
+                if (isNaN(userAnswer)) {
+                    feedbackDiv.textContent = "Oops! Use numbers only. 😉";
+                    feedbackDiv.className = 'incorrect';
+                    delay = 1000;
+                } else {
+                    isCorrect = (userAnswer === currentQuestion.answer);
+                }
             }
 
-            let delay = 600; // Default delay
-
-            if (userAnswer === currentQuestion.answer) {
+            if (isCorrect) {
                 feedbackDiv.textContent = "Correct! 😄👍";
                 feedbackDiv.className = 'correct';
                 correctAnswers++;
-                // Increase range based on difficulty
-                if (selectedDifficulty === 'hard') {
-                    currentMaxRange += HARD_RANGE_INCREMENT;
+                // Increase range
+                if (operationType === 'currency') {
+                    currentMaxRange += CURRENCY_RANGE_INCREMENT_CENTS;
                 } else {
-                    currentMaxRange += EASY_RANGE_INCREMENT;
+                    currentMaxRange += (selectedDifficulty === 'hard') ? HARD_RANGE_INCREMENT : EASY_RANGE_INCREMENT;
                 }
             } else {
-                feedbackDiv.textContent = `Not quite! The answer was ${currentQuestion.answer}. 🤔`;
-                feedbackDiv.className = 'incorrect';
-                // Decrease range (same for both difficulties)
-                currentMaxRange = Math.max(MIN_RANGE, currentMaxRange - RANGE_DECREMENT);
-                delay = 1500; // Longer delay for incorrect answer
+                // Only show this specific feedback if the input was at least parsable for the type
+                if (!feedbackDiv.textContent) { // If no parsing error message already set
+                     feedbackDiv.textContent = `Not quite! The answer was ${correctAnswerForDisplay}. 🤔`;
+                     feedbackDiv.className = 'incorrect';
+                }
+                delay = Math.max(delay, 1500); // Ensure delay is at least 1500 for incorrect/parse errors
+                // Decrease range
+                if (operationType === 'currency') {
+                    currentMaxRange = Math.max(CURRENCY_MIN_RANGE_CENTS, currentMaxRange - CURRENCY_RANGE_DECREMENT_CENTS);
+                } else {
+                    currentMaxRange = Math.max(MIN_RANGE_NUMBERS, currentMaxRange - RANGE_DECREMENT);
+                }
             }
 
             setTimeout(() => {
                 answerInput.disabled = false;
-                moveToNextQuestion();
+                if (isCorrect || (!isCorrect && feedbackDiv.textContent.startsWith("Not quite"))) { // Move to next if correct or "Not quite"
+                    moveToNextQuestion();
+                } else { // If it was a parsing error, allow re-try on same question
+                    answerInput.focus();
+                    answerInput.select();
+                }
             }, delay);
         }
 
@@ -569,8 +715,7 @@
         }
 
         function startGame() {
-            // 1. Read Settings
-            totalQuestions = parseInt(numQuestionsInput.value, 10) || 20;
+            totalQuestions = parseInt(numQuestionsInput.value, 10) || 10;
             if (totalQuestions < 1) totalQuestions = 1;
             if (totalQuestions > 100) totalQuestions = 100;
             numQuestionsInput.value = totalQuestions;
@@ -581,7 +726,6 @@
                     break;
                 }
             }
-            // Read difficulty setting
             for (const radio of difficultyRadios) {
                 if (radio.checked) {
                     selectedDifficulty = radio.value;
@@ -589,33 +733,31 @@
                 }
             }
 
-            // 2. Reset state
             currentQuestionIndex = 0;
             correctAnswers = 0;
+            currencyCorrectCount = 0; // Reset currency correct count
             startTime = Date.now();
             feedbackDiv.textContent = '';
             feedbackDiv.className = '';
 
-            // Set initial range based on difficulty
-            if (selectedDifficulty === 'hard') {
-                currentMaxRange = HARD_START_RANGE;
-            } else { // Default to easy
-                currentMaxRange = EASY_START_RANGE;
+            if (operationType === 'currency') {
+                currentMaxRange = (selectedDifficulty === 'hard') ? CURRENCY_HARD_START_RANGE_CENTS : CURRENCY_EASY_START_RANGE_CENTS;
+                currentMinRange = CURRENCY_MIN_RANGE_CENTS;
+            } else {
+                currentMaxRange = (selectedDifficulty === 'hard') ? HARD_START_RANGE : EASY_START_RANGE;
+                currentMinRange = MIN_RANGE_NUMBERS;
             }
-            console.log(`Starting game: ${selectedDifficulty} difficulty, range 0-${currentMaxRange}`); // Debug log
+            console.log(`Starting game: ${selectedDifficulty} difficulty, op: ${operationType}, max operand range: ${currentMaxRange}`);
 
-            // 3. Update UI
             settingsDiv.style.display = 'none';
             resultsDiv.style.display = 'none';
             quizDiv.style.display = 'block';
             answerInput.disabled = false;
 
-            // 4. Start Timer
             timerSpan.textContent = 'Time: 00:00';
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
 
-            // 5. Generate first question
             generateQuestion();
         }
 
@@ -629,7 +771,14 @@
 
             correctCountSpan.textContent = correctAnswers;
             totalCountSpan.textContent = totalQuestions;
-            finalRangeSpan.textContent = `0 - ${currentMaxRange}`; // Display the final max range reached
+            
+            let finalRangeDisplay;
+            if (operationType === 'currency') {
+                finalRangeDisplay = `Operands up to ${formatCurrency(currentMaxRange)}`;
+            } else {
+                finalRangeDisplay = `0 - ${currentMaxRange}`;
+            }
+            finalRangeSpan.textContent = finalRangeDisplay;
             totalTimeSpan.textContent = formatTime(totalTimeMillis);
         }
 
@@ -638,9 +787,10 @@
             resultsDiv.style.display = 'none';
             quizDiv.style.display = 'none';
             settingsDiv.style.display = 'block';
-            // Resetting difficulty/operation to default is optional, depends on desired behavior
+            // Optionally reset settings to defaults
             // document.getElementById('diff-easy').checked = true;
             // document.getElementById('op-add').checked = true;
+            // numQuestionsInput.value = 10;
         }
 
         // --- Event Listeners ---
@@ -658,6 +808,9 @@
 
         // --- Initial Setup ---
         console.log("Fun Arithmetic app ready! 🐾");
+        // Set default for num questions on load
+        numQuestionsInput.value = totalQuestions;
+
 
     </script>
 </body>
